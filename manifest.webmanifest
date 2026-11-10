@@ -1,0 +1,17 @@
+{
+  "name": "Chamada Portaria · Etec da Zona Leste – CEU São Miguel",
+  "short_name": "Portaria",
+  "description": "Controle de entrada dos alunos na portaria por QR Code",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f4f5",
+  "theme_color": "#b2140f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

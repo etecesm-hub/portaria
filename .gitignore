@@ -1,0 +1,10 @@
+# Planilhas com dados de alunos NUNCA devem ir para o GitHub
+*.xlsx
+*.xls
+*.csv
+# Backend (fica só no Google Apps Script) e ferramentas locais
+apps-script/
+gerar_pacote_netlify.py
+Gerar pacote Netlify.bat
+_headers
+_teste/

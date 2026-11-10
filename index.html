@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chamada Portaria · Etec ZL</title>
+  <meta name="description" content="Controle de entrada na portaria — Etec da Zona Leste / Extensão CEU São Miguel">
+  <meta name="theme-color" content="#b2140f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Portaria">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============================ LOGIN ============================ -->
+<section id="tela-login" class="tela-login" hidden>
+  <div class="login-card">
+    <div class="login-logos">
+      <img src="icons/logo-etec.png" alt="Etec da Zona Leste">
+      <img src="icons/logo-cps.png" alt="Centro Paula Souza">
+    </div>
+    <h1>Chamada da Portaria</h1>
+    <p class="login-sub">Extensão CEU São Miguel</p>
+    <form id="form-login" autocomplete="on">
+      <label>Usuário
+        <input id="login-usuario" name="username" autocomplete="username" autocapitalize="none" required>
+      </label>
+      <label>Senha
+        <input id="login-senha" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primario btn-grande" type="submit" id="btn-entrar">Entrar</button>
+      <p id="login-erro" class="erro" role="alert"></p>
+      <p id="login-demo" class="dica" hidden>Modo demonstração (sem planilha conectada). Use <b>admin</b> / <b>admin</b>.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ============================ APP ============================ -->
+<div id="app" hidden>
+  <header class="topo">
+    <div class="topo-marca">
+      <strong>Portaria</strong>
+      <span id="topo-usuario"></span>
+    </div>
+    <button id="status-sync" class="status-sync" type="button" title="Sincronizar agora">
+      <span class="ponto"></span><span class="texto">…</span>
+    </button>
+    <button id="btn-menu" class="btn-icone" type="button" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </button>
+  </header>
+
+  <div id="faixa-offline" class="faixa-offline" hidden>
+    Sem internet — as entradas estão sendo salvas neste aparelho e serão enviadas automaticamente.
+  </div>
+  <div id="faixa-demo" class="faixa-demo" hidden>MODO DEMONSTRAÇÃO — dados só neste aparelho. Configure a API_URL em js/config.js.</div>
+
+  <main>
+    <!-- ---------- PORTARIA ---------- -->
+    <section id="aba-portaria" class="aba">
+      <div class="relogio">
+        <div><span id="relogio-hora">--:--</span><small id="relogio-data"></small></div>
+        <div id="relogio-portao" class="portao aberto">Portão aberto até <b id="limite-txt">18:40</b></div>
+      </div>
+
+      <div class="leitor-wrap">
+        <div id="leitor"></div>
+        <div id="leitor-desligado" class="leitor-desligado">
+          <button id="btn-camera" class="btn btn-primario btn-grande" type="button">📷 Ligar câmera</button>
+          <p class="dica">Aponte para o QR Code da carteirinha</p>
+        </div>
+      </div>
+
+      <form id="form-manual" class="form-manual">
+        <input id="rm-manual" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Digite o RM" autocomplete="off" enterkeyhint="go">
+        <button class="btn btn-primario" type="submit">Registrar</button>
+      </form>
+
+      <div class="contadores">
+        <div><b id="cont-total">0</b><span>entradas</span></div>
+        <div class="ok"><b id="cont-ok">0</b><span>no horário</span></div>
+        <div class="atraso"><b id="cont-atraso">0</b><span>atrasados</span></div>
+        <div class="pend"><b id="cont-pend">0</b><span>a enviar</span></div>
+      </div>
+
+      <h2 class="titulo-sec">Últimas leituras</h2>
+      <ul id="ultimas" class="lista"></ul>
+    </section>
+
+    <!-- ---------- HOJE ---------- -->
+    <section id="aba-hoje" class="aba" hidden>
+      <div class="filtros">
+        <input id="hoje-data" type="date">
+        <select id="hoje-turma"></select>
+      </div>
+      <div class="segmentos" role="tablist">
+        <button data-seg="atrasados" class="ativo">Atrasados <span id="seg-n-atrasados"></span></button>
+        <button data-seg="ausentes">Ausentes <span id="seg-n-ausentes"></span></button>
+        <button data-seg="presentes">No horário <span id="seg-n-presentes"></span></button>
+      </div>
+      <div class="acoes-linha">
+        <span class="dica">Relatório do dia (turma do filtro ou todas):</span>
+        <button id="btn-pdf-dia" class="btn btn-sec" type="button">📄 PDF</button>
+        <button id="btn-xls-dia" class="btn btn-sec" type="button">📊 Excel</button>
+      </div>
+      <p id="hoje-nota" class="dica"></p>
+      <button id="btn-lote" class="btn btn-whats btn-bloco" type="button" hidden></button>
+      <ul id="lista-hoje" class="lista"></ul>
+    </section>
+
+    <!-- ---------- ALUNOS ---------- -->
+    <section id="aba-alunos" class="aba" hidden>
+      <div class="filtros">
+        <input id="busca-aluno" type="search" placeholder="Buscar por nome ou RM">
+        <select id="alunos-turma"></select>
+      </div>
+      <div class="acoes-linha">
+        <span id="alunos-total" class="dica"></span>
+        <button id="btn-pdf-turma" class="btn btn-sec" type="button">📄 PDF turma</button>
+        <button id="btn-xls-turma" class="btn btn-sec" type="button">📊 Excel turma</button>
+        <button id="btn-lote-freq" class="btn btn-whats" type="button">Avisar freq. baixa</button>
+      </div>
+      <ul id="lista-alunos" class="lista"></ul>
+    </section>
+
+    <!-- ---------- IMPORTAR ---------- -->
+    <section id="aba-importar" class="aba" hidden>
+      <h2 class="titulo-sec">Importar planilha da Secretaria</h2>
+      <p class="dica">Aceita <b>Relação de Alunos</b> (RM, Nome, Grupo), <b>Lista de Frequência</b> (por componente) e planilhas de <b>contatos</b> (RM, Responsável, Telefone). Formatos .xlsx, .xls ou .csv. O RM é a chave: o histórico de presenças nunca é apagado.</p>
+      <label class="arquivo">
+        <input id="arquivo" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+        <span>📄 Escolher planilha</span>
+      </label>
+      <div id="preview" hidden></div>
+
+      <h2 class="titulo-sec">Telefones dos responsáveis</h2>
+      <p class="dica">Baixe a planilha já preenchida com RM, nome e turma de todos os alunos cadastrados. Preencha as colunas <b>RESPONSAVEL</b> e <b>TELEFONE</b> (com DDD) e importe aqui mesmo. Linhas sem telefone são ignoradas; telefones já cadastrados são substituídos pelos da planilha.</p>
+      <button id="btn-modelo-contatos" class="btn btn-sec btn-bloco" type="button">📊 Baixar planilha de contatos</button>
+    </section>
+  </main>
+
+  <nav class="abas">
+    <button data-aba="portaria" class="ativo"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm13-2h3v2h-3zm-5 0h3v3h-3zm3 3h2v3h-2zm-3 3h3v2h-3zm5 0h3v2h-3z"/></svg>Portaria</button>
+    <button data-aba="hoje"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm-2 8h14v10H5z"/></svg>Dia</button>
+    <button data-aba="alunos"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4m0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5"/></svg>Alunos</button>
+    <button data-aba="importar" data-admin><svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14v-2H5zm7-16-5 5h3v6h4V9h3z"/></svg>Importar</button>
+  </nav>
+</div>
+
+<!-- Resultado da leitura (tela cheia) -->
+<div id="resultado" class="resultado" hidden>
+  <div class="resultado-card">
+    <div class="resultado-status" id="res-status"></div>
+    <div class="resultado-nome" id="res-nome"></div>
+    <div class="resultado-info" id="res-info"></div>
+  </div>
+</div>
+
+<!-- Painel / modal genérico -->
+<div id="painel" class="painel" hidden>
+  <div class="painel-fundo" data-fechar></div>
+  <div class="painel-caixa" role="dialog" aria-modal="true">
+    <button class="painel-x" data-fechar aria-label="Fechar">×</button>
+    <div id="painel-conteudo"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- Bibliotecas open-source (cacheadas pelo service worker para uso offline) -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/whatsapp.js"></script>
+<script src="js/scanner.js"></script>
+<script src="js/importar.js" defer></script>
+<script src="js/pdf.js" defer></script>
+<script src="js/excel.js" defer></script>
+<script src="js/usuarios.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>
