@@ -131,35 +131,36 @@ Vá em **Implantar → Gerenciar implantações → ✏️ Editar**, escolha *Ve
 
 ## 5. Hospedar o app com HTTPS (grátis)
 
-> ✅ **Instalação atual:** o app está publicado em **https://portaria-etec-saomiguel.netlify.app**
-> (conta Netlify do e-mail do sistema, projeto `portaria-etec-saomiguel`, acesso público).
+> ✅ **Instalação atual:** o app está publicado em **https://etecesm-hub.github.io/portaria/**
+> (GitHub Pages, conta `etecesm-hub`, repositório público `etecesm-hub/portaria`, branch `main`).
 > O backend é o projeto Apps Script **"Chamada Portaria - Backend"**, ligado à planilha
 > **"Chamada Portaria – Etec ZL CEU São Miguel"** pelo `PLANILHA_ID`.
 
-### Como atualizar o site (Netlify)
+### Como atualizar o site (GitHub Pages)
 1. Faça as alterações nos arquivos e aumente a versão na 1ª linha do `sw.js`.
-2. Dê dois cliques em **`Gerar pacote Netlify.bat`** (dentro de `chamada-portaria`). Ele cria
-   `Vestibulinho ete\portaria-netlify.zip` só com os arquivos do app (sem o backend e sem planilhas).
-3. Entre em app.netlify.com → projeto **portaria-etec-saomiguel** → aba **Deploys** e arraste o
-   zip na área *"Drag and drop your project output folder here"*. Não use a caixa do assistente de IA.
+2. Dê dois cliques em **`Publicar atualizacao.bat`** (dentro de `chamada-portaria`). Ele envia as
+   mudanças para o GitHub. Em 1 a 3 minutos o site está atualizado.
+3. Na primeira vez num computador novo, o GitHub pede login: escolha entrar **com código** e digite
+   o código em github.com/login/device estando logado como **etecesm-hub** (não use outra conta).
 
-A câmera só funciona em HTTPS. As duas opções abaixo são gratuitas.
+O `.gitignore` impede que o backend (`apps-script/`), planilhas e ferramentas locais vão para o
+repositório público. ⚠️ **Nunca** envie planilhas de alunos (.xlsx/.csv) para o GitHub.
 
-### Opção A — GitHub Pages
+A câmera só funciona em HTTPS. Para montar em outro lugar, as duas opções abaixo são gratuitas.
+
+### Opção A — GitHub Pages (a usada nesta instalação)
 1. Crie uma conta no GitHub com o e-mail do sistema.
-2. Crie um repositório novo, por exemplo `portaria`. Ele pode ser público: **não** tem dados de alunos.
-3. Clique em **Add file → Upload files** e envie **todo o conteúdo** da pasta `chamada-portaria`
-   (exceto `apps-script/`, que é opcional).
+2. Crie um repositório novo e público, por exemplo `portaria` (o código não tem dados de alunos).
+3. Envie os arquivos (git push, ou **Add file → Upload files**), sem a pasta `apps-script/`.
 4. Em **Settings → Pages**, escolha *Source: Deploy from a branch*, *Branch: main / (root)* e salve.
-5. Em cerca de 1 minuto o app estará em `https://SEU-USUARIO.github.io/portaria/`.
+   Confira se a página passa a dizer *"Your GitHub Pages site is currently being built"*.
+5. Em 1 a 3 minutos o app estará em `https://SEU-USUARIO.github.io/portaria/`.
 
-> ⚠️ **Nunca** envie planilhas de alunos (.xlsx/.csv) para o GitHub. O `.gitignore` já bloqueia isso.
-> A importação é feita pelo próprio app.
-
-### Opção B — Netlify (a usada nesta instalação)
-Crie a conta com o Google do e-mail do sistema, envie o `portaria-netlify.zip` em
-*"Upload your project files"* e, no painel do projeto, clique em **Make public**: projetos novos
-começam como **Private** e respondem "401" para os celulares até serem tornados públicos.
+### Opção B — Netlify
+Funciona, mas o plano gratuito coloca o selo **"Powered by Netlify"** no canto inferior direito,
+em cima do menu do app. Para usar: crie a conta, rode `Gerar pacote Netlify.bat`, envie o
+`portaria-netlify.zip` em *"Upload your project files"* e clique em **Make public** (projetos novos
+começam privados).
 
 ### Atualizar o app nos celulares
 Sempre que mudar arquivos do app, aumente a versão na 1ª linha do `sw.js`
