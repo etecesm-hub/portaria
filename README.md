@@ -222,8 +222,16 @@ para o ano atual e avisa na prévia; os relatórios usam sempre o ano letivo cor
 - **Portaria**: toque em *Ligar câmera* e aponte para a carteirinha. Aparece uma tela cheia
   **verde** (no horário), **laranja** (atrasado), **cinza** (já registrado hoje) ou **vermelha**
   (RM não encontrado), com som e vibração.
-- O QR Code da carteirinha deve conter o **RM**. Pode ser só o número (`27247`) ou um texto/link
-  com o número dentro. O app pega a primeira sequência de 3 ou mais dígitos.
+- **QR do aluno (próprio do sistema):** a carteirinha digital do Sistema NSA tem um QR que só
+  traz um link de validação (muda todo dia e **não contém o RM**). Por isso o app gera o seu
+  próprio QR, fixo, com o conteúdo `RM:27247`:
+  - **Etiquetas A4 por turma:** aba **Alunos** → escolha a turma no filtro → **🏷 Etiquetas QR**.
+    São 21 por folha, no formato Pimaco **A4256** (63,5 × 38,1 mm). Imprima em **tamanho real / 100%**
+    (sem "ajustar à página"). Também serve papel comum: recorte pelo contorno.
+  - **Imagem individual:** abra a ficha do aluno → **🔳 QR do aluno** → *Compartilhar* (WhatsApp…)
+    ou *Baixar imagem*. O aluno pode guardar na galeria e mostrar na portaria.
+- O leitor também aceita QR com só o número (`27247`), `RM: 27247` ou link com `?rm=27247`.
+  Se ler o QR da carteirinha NSA, o app avisa e pede para digitar a matrícula.
 - Se o aluno esqueceu a carteirinha, digite o RM no campo abaixo da câmera.
 - O selo no topo mostra **Sincronizado**, **N a enviar** ou **Offline**. Toque nele para forçar o envio.
 - **Dia**: atrasados, ausentes e no horário, por turma e por data.

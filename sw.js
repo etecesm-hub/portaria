@@ -1,6 +1,6 @@
 /* Service Worker — deixa o app abrir e funcionar sem internet.
    Ao alterar qualquer arquivo do app, aumente a VERSAO para os celulares baixarem a nova versão. */
-const VERSAO = 'portaria-v1.3.1';
+const VERSAO = 'portaria-v1.4.0';
 
 const ARQUIVOS = [
   './',
@@ -15,6 +15,7 @@ const ARQUIVOS = [
   './js/importar.js',
   './js/pdf.js',
   './js/excel.js',
+  './js/qr.js',
   './js/usuarios.js',
   './js/app.js',
   './icons/icon-192.png',
@@ -30,13 +31,15 @@ const BIBLIOTECAS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(VERSAO);
-    await cache.addAll(ARQUIVOS);
+    // cache: 'reload' ignora o cache HTTP do navegador: cada versão nova baixa os arquivos novos
+    await cache.addAll(ARQUIVOS.map((u) => new Request(u, { cache: 'reload' })));
     // bibliotecas externas: uma falha não impede a instalação
     await Promise.all(BIBLIOTECAS.map((url) => cache.add(new Request(url, { mode: 'cors' })).catch(() => null)));
     self.skipWaiting();

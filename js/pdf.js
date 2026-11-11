@@ -440,5 +440,6 @@
     salvar(doc, `Portaria_${data}${chaveTurma ? '_' + U.semAcento(filtro).replace(/\W+/g, '_') : ''}.pdf`);
   };
 
+  PDF.mostrar = salvar; // pré-visualização + baixar/compartilhar, usada por outros módulos
   window.PDF = PDF;
 })();

@@ -40,6 +40,12 @@
     });
     $('#btn-lote-freq').addEventListener('click', loteFrequencia);
     $('#btn-xls-turma').addEventListener('click', () => Excel.turma($('#alunos-turma').value));
+    $('#btn-etiquetas').addEventListener('click', () => {
+      const t = $('#alunos-turma').value;
+      const n = t ? D.alunosDaTurma(t).length : Object.values(D.S.alunos).filter((a) => a.ativo).length;
+      if (!t && !confirm(`Nenhuma turma escolhida no filtro. Gerar etiquetas de TODOS os ${n} alunos ativos?`)) return;
+      QR.etiquetas(t);
+    });
     $('#btn-pdf-dia').addEventListener('click', () => PDF.dia($('#hoje-data').value || U.hojeStr(), $('#hoje-turma').value));
     $('#btn-xls-dia').addEventListener('click', () => Excel.dia($('#hoje-data').value || U.hojeStr(), $('#hoje-turma').value));
     $('#btn-modelo-contatos').addEventListener('click', () => Excel.modeloContatos());
@@ -286,6 +292,7 @@
       <div class="acoes-ficha">
         <button class="btn btn-primario" id="ficha-pdf">📄 Relatório PDF</button>
         <button class="btn btn-sec" id="ficha-xls">📊 Excel</button>
+        <button class="btn btn-sec" id="ficha-qr">🔳 QR do aluno</button>
         ${hoje && hoje.status === 'Atrasado' ? '<button class="btn btn-whats" id="ficha-w-atraso">📲 Avisar atraso</button>' : ''}
         ${!hoje ? '<button class="btn btn-whats" id="ficha-w-falta">📲 Avisar falta</button>' : ''}
         ${f && f.freqAcumulada < CONFIG.FREQ_MINIMA ? '<button class="btn btn-whats" id="ficha-w-freq">📲 Avisar frequência</button>' : ''}
@@ -301,6 +308,7 @@
     });
     $('#ficha-pdf').addEventListener('click', () => PDF.aluno(rm));
     $('#ficha-xls').addEventListener('click', () => Excel.aluno(rm));
+    $('#ficha-qr').addEventListener('click', () => QR.abrirAluno(rm));
     const liga = (id, tipo) => { const b = $(id); if (b) b.addEventListener('click', () => W.enviar(D.S.alunos[rm], tipo, { data: U.hojeStr(), hora: hoje ? hoje.hora : '' }) && abrirAluno(rm)); };
     liga('#ficha-w-atraso', 'atraso'); liga('#ficha-w-falta', 'falta'); liga('#ficha-w-freq', 'frequencia');
     const be = $('#ficha-entrada');
