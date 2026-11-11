@@ -1,6 +1,6 @@
 /* Service Worker — deixa o app abrir e funcionar sem internet.
    Ao alterar qualquer arquivo do app, aumente a VERSAO para os celulares baixarem a nova versão. */
-const VERSAO = 'portaria-v1.3.0';
+const VERSAO = 'portaria-v1.3.1';
 
 const ARQUIVOS = [
   './',

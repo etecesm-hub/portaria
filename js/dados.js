@@ -220,6 +220,7 @@
   /** Registra a entrada. Retorna {tipo:'ok'|'atraso'|'repetido'|'erro', aluno, presenca, msg} */
   D.registrarEntrada = function (texto, origem) {
     const rm = U.normalizarRM(texto);
+    if (!rm && U.ehQrNSA(texto)) return { tipo: 'erro', nsa: true, msg: 'Carteirinha NSA: este QR não traz o RM. Digite o RM no campo abaixo.' };
     if (!rm) return { tipo: 'erro', msg: 'QR Code sem RM válido' };
     const aluno = S.alunos[rm];
     if (!aluno) return { tipo: 'erro', msg: `RM ${rm} não encontrado na base` };

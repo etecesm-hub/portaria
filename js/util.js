@@ -31,11 +31,24 @@
   U.semAcento = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '');
   U.norm = (s) => U.semAcento(s).toUpperCase().replace(/\s+/g, ' ').trim();
 
+  /** Extrai o RM de: "27247", "027247", "RM: 27247", "RM 27247 - NOME" ou URL com ?rm=27247.
+      Não "adivinha" números soltos de links/códigos (ex.: QR da carteirinha NSA, que traz um código
+      de validação e não o RM). */
+  const soDigitos = (v) => v.replace(/^0+(?=\d)/, '');
   U.normalizarRM = (txt) => {
     const s = String(txt == null ? '' : txt).trim();
-    const m = s.match(/\d{3,}/);           // aceita QR com texto/URL contendo o RM
-    return m ? m[0].replace(/^0+(?=\d)/, '') : '';
+    if (/^\d[\d\s.\-]{1,14}$/.test(s)) return soDigitos(s.replace(/\D/g, ''));       // só o número
+    const rotulo = s.match(/\b(?:RM|R\.M\.|MATR[IÍ]CULA)\s*[:#nº°.\-]*\s*(\d{3,})/i);  // "RM: 27247"
+    if (rotulo) return soDigitos(rotulo[1]);
+    try {                                                                              // link ?rm=27247
+      const u = new URL(s);
+      const p = u.searchParams.get('rm') || u.searchParams.get('matricula') || u.searchParams.get('ra');
+      if (p && /^\d{3,}$/.test(p)) return soDigitos(p);
+    } catch (e) { /* não é link */ }
+    return '';
   };
+  /** QR da carteirinha digital do Sistema NSA (nsaetec.com.br): traz só um código de validação. */
+  U.ehQrNSA = (txt) => /nsaetec\.com\.br/i.test(String(txt || ''));
 
   /** "NOVOTEC N - ADMINISTRAÇÃO" -> "ADMINISTRAÇÃO" */
   U.curso = (hab) => { const p = String(hab || '').split(' - '); return p[p.length - 1].trim(); };

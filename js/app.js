@@ -134,15 +134,19 @@
     U.feedback(r.tipo);
     const box = $('#resultado');
     box.className = 'resultado ' + r.tipo;
-    const st = { ok: '✔ NO HORÁRIO', atraso: '⏰ ATRASADO', repetido: 'ℹ JÁ REGISTRADO', erro: '✖ NÃO REGISTRADO' }[r.tipo];
+    const st = r.nsa ? '⌨ DIGITE O RM' : { ok: '✔ NO HORÁRIO', atraso: '⏰ ATRASADO', repetido: 'ℹ JÁ REGISTRADO', erro: '✖ NÃO REGISTRADO' }[r.tipo];
     $('#res-status').textContent = st;
-    $('#res-nome').textContent = r.aluno ? U.nomeProprio(r.aluno.nome) : (r.msg || '');
+    $('#res-nome').textContent = r.aluno ? U.nomeProprio(r.aluno.nome) : r.nsa ? 'Carteirinha digital NSA' : (r.msg || '');
     $('#res-info').innerHTML = r.aluno
       ? `RM ${esc(r.aluno.rm)} · ${esc(U.rotuloTurma(r.aluno))}<br>${r.presenca ? (r.tipo === 'repetido' ? esc(r.msg) : 'Entrada às ' + r.presenca.hora.slice(0, 5)) : esc(r.msg || '')}`
-      : 'Confira o RM ou digite manualmente';
+      : r.nsa ? 'Este QR não traz o RM.<br>Digite a <b>matrícula</b> que aparece na frente da carteirinha.'
+        : 'Confira o RM ou digite manualmente';
     box.hidden = false;
     clearTimeout(App._tRes);
-    App._tRes = setTimeout(() => { box.hidden = true; }, r.tipo === 'erro' ? 3200 : 2200);
+    App._tRes = setTimeout(() => {
+      box.hidden = true;
+      if (r.nsa) $('#rm-manual').focus();
+    }, r.tipo === 'erro' ? 3200 : 2200);
     renderPortaria();
   }
 
