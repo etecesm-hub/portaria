@@ -79,6 +79,7 @@ precisa de **HTTPS** (veja o passo 5).
 1. Na planilha, abra o menu **Extensões → Apps Script**.
 2. Apague o conteúdo do arquivo `Código.gs` e **cole todo o `apps-script/code.gs`**. Depois crie um
    segundo arquivo em **Arquivos → + → Script**, chame de `fotos` e cole o `apps-script/fotos.gs`.
+   Faça o mesmo com `cancelamentos` (cole o `apps-script/cancelamentos.gs`).
 3. Clique em ⚙️ **Configurações do projeto** e marque *"Exibir arquivo de manifesto appsscript.json"*.
    Volte ao editor, abra o `appsscript.json` e substitua o conteúdo pelo nosso `apps-script/appsscript.json`.
 4. **Senha do admin.** No início do `code.gs`, troque `DIGITE_A_SENHA_AQUI` pela senha do admin
@@ -287,6 +288,18 @@ das 18:40 a lista ainda muda (o app avisa). No PDF, "Sem entrada registrada" con
 a portaria registrou alguma entrada (dias letivos).
 
 ---
+
+## 9a. Cancelar um registro de entrada
+
+- **Logo após a leitura:** na tela verde/laranja, toque em **✖ Cancelar este registro**.
+- **Depois:** toque na entrada em *Últimas leituras* (ou na lista da aba **Dia**) → **Cancelar registro**,
+  ou na ficha do aluno → *Cancelar registro*.
+- É preciso escolher o **motivo** (leitura de teste, aluno errado, duplicidade…).
+- Qualquer usuário cancela registros **do dia**; registros de dias anteriores, só o **admin**.
+- Nada é apagado: na aba *Presencas* o Status vira **Cancelado** e a aba *Log* guarda quem cancelou,
+  quando e o motivo. O registro sai das listas, dos relatórios e da contagem de atrasos/faltas, e o
+  aluno pode ter a entrada registrada de novo. Sem internet, o cancelamento entra na fila e é
+  enviado depois.
 
 ## 9b. Fotos 3x4
 

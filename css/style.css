@@ -266,3 +266,11 @@ main { padding: 14px 16px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom)
 .grade-fotos img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; }
 .grade-fotos figcaption { font-size: .7rem; line-height: 1.2; margin-top: 3px; color: var(--suave); }
 .grade-fotos figcaption b { display: block; color: var(--txt); }
+
+/* ---------- Cancelar registro ---------- */
+.btn-perigo { background: #fff; color: var(--falta); border: 2px solid var(--falta); }
+.btn-perigo:hover { background: var(--falta-bg); }
+.btn-res-cancelar { margin-top: 22px; background: rgba(255, 255, 255, .16); color: #fff; border: 2px solid rgba(255, 255, 255, .7); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: .92rem; cursor: pointer; }
+#ultimas .item { cursor: pointer; }
+.hoje-aluno .btn-link { float: right; color: inherit; text-decoration: underline; padding: 0; }
+#form-cancelar label { margin: 10px 0; }

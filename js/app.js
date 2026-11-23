@@ -23,6 +23,13 @@
     $('#status-sync').addEventListener('click', () => { D.sincronizar(); D.carregarBase().catch(() => {}); U.toast(D.DEMO ? 'Modo demonstração: nada a sincronizar' : 'Sincronizando…'); });
     $('#btn-menu').addEventListener('click', abrirMenu);
     $('#resultado').addEventListener('click', () => { $('#resultado').hidden = true; });
+    $('#res-cancelar').addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearTimeout(App._tRes);
+      $('#resultado').hidden = true;
+      const p = D.S.presencas[$('#res-cancelar').dataset.id];
+      if (p) dialogoCancelar(p);
+    });
     $('#painel').addEventListener('click', (e) => { if (e.target.closest('[data-fechar]')) fecharPainel(); });
 
     $('#hoje-data').addEventListener('change', () => { D.sincronizar([$('#hoje-data').value]); renderHoje(); });
@@ -154,10 +161,13 @@
         : 'Confira o RM ou digite manualmente';
     box.hidden = false;
     clearTimeout(App._tRes);
+    const bc = $('#res-cancelar');
+    bc.hidden = !(r.presenca && (r.tipo === 'ok' || r.tipo === 'atraso'));
+    bc.dataset.id = r.presenca ? r.presenca.id : '';
     App._tRes = setTimeout(() => {
       box.hidden = true;
       if (r.nsa) $('#rm-manual').focus();
-    }, r.tipo === 'erro' ? 3200 : 2200);
+    }, r.tipo === 'erro' ? 3200 : bc.hidden ? 2200 : 3000);
     renderPortaria();
   }
 
@@ -169,13 +179,14 @@
     $('#cont-atraso').textContent = hoje.filter((p) => p.status === 'Atrasado').length;
     $('#ultimas').innerHTML = hoje.slice(0, 15).map((p) => {
       const a = D.S.alunos[p.rm] || p;
-      return `<li class="item ${p.status === 'Atrasado' ? 'atraso' : 'ok'}">
+      return `<li class="item ${p.status === 'Atrasado' ? 'atraso' : 'ok'}" data-pid="${esc(p.id)}">
         <div class="item-hora">${p.hora.slice(0, 5)}</div>
         ${Fotos.html(a.rm ? a : p, 'foto-mini')}
         <div class="item-corpo"><b>${esc(U.nomeProprio(p.nome))}</b><span>RM ${p.rm} · ${esc(U.rotuloTurma(a))}</span></div>
         <div class="item-fim">${p.enviado ? '' : '<span class="nuvem" title="Aguardando envio">⏳</span>'}<span class="selo ${p.status === 'Atrasado' ? 'atraso' : 'ok'}">${p.status}</span></div>
       </li>`;
     }).join('') || '<li class="vazio">Nenhuma entrada registrada hoje.</li>';
+    $$('#ultimas [data-pid]').forEach((li) => li.addEventListener('click', () => { const p = D.S.presencas[li.dataset.pid]; if (p) dialogoRegistro(p); }));
     atualizarStatus();
   }
 
@@ -236,7 +247,10 @@
       const a = D.S.alunos[b.dataset.whats];
       if (W.enviar(a, tipo, { data, hora: porRm[a.rm] ? porRm[a.rm].hora : '' })) renderHoje();
     }));
-    $$('#lista-hoje .item').forEach((li) => li.addEventListener('click', () => abrirAluno(li.dataset.rm)));
+    $$('#lista-hoje .item').forEach((li) => li.addEventListener('click', () => {
+      const p = porRm[li.dataset.rm];
+      if (p) dialogoRegistro(p); else abrirAluno(li.dataset.rm);
+    }));
   }
 
   // ------------------------------------------------------------------ Aba Alunos
@@ -283,6 +297,7 @@
       </div>
       <div class="hoje-aluno ${hoje ? (hoje.status === 'Atrasado' ? 'atraso' : 'ok') : 'falta'}">
         Hoje: ${hoje ? `${hoje.status} às ${hoje.hora.slice(0, 5)}` : 'sem entrada registrada'}
+        ${hoje && D.podeCancelar(hoje) ? '<button class="btn-link" id="ficha-cancelar" type="button">Cancelar registro</button>' : ''}
       </div>
 
       <h3>Responsável</h3>
@@ -318,6 +333,7 @@
       U.toast('Contato salvo ✔');
     });
     $('#ficha-pdf').addEventListener('click', () => PDF.aluno(rm));
+    if ($('#ficha-cancelar')) $('#ficha-cancelar').addEventListener('click', () => dialogoCancelar(hoje, () => abrirAluno(rm)));
     $('#ficha-trocar-foto').addEventListener('click', () => Fotos.trocar(rm, () => abrirAluno(rm)));
     $('#ficha-xls').addEventListener('click', () => Excel.aluno(rm));
     $('#ficha-qr').addEventListener('click', () => QR.abrirAluno(rm));
@@ -325,6 +341,67 @@
     liga('#ficha-w-atraso', 'atraso'); liga('#ficha-w-falta', 'falta'); liga('#ficha-w-freq', 'frequencia');
     const be = $('#ficha-entrada');
     if (be) be.addEventListener('click', () => { fecharPainel(); lerCodigo(rm, 'manual'); });
+  }
+
+  // ------------------------------------------------------------------ Registro de entrada / cancelamento
+  function dialogoRegistro(p) {
+    const a = D.S.alunos[p.rm] || p;
+    App.abrirPainel(`
+      <div class="ficha-topo">
+        <div class="ficha-foto">${Fotos.html(a, 'foto-ficha')}</div>
+        <div><h2>${esc(U.nomeProprio(p.nome))}</h2><p class="dica">RM ${esc(p.rm)} · ${esc(U.rotuloTurma(a))}</p></div>
+      </div>
+      <div class="hoje-aluno ${p.status === 'Atrasado' ? 'atraso' : 'ok'}">${esc(p.status)} · ${U.fmtData(p.data)} às ${p.hora.slice(0, 5)}</div>
+      <ul class="mini-lista">
+        <li>Registrado por <b>${esc(p.operador || '—')}</b>${p.origem === 'manual' ? ' (RM digitado)' : ' (QR Code)'}</li>
+        <li>${p.enviado ? 'Já está na planilha' : 'Ainda neste aparelho, aguardando envio'}</li>
+      </ul>
+      <div class="acoes-ficha">
+        ${D.podeCancelar(p) ? '<button class="btn btn-perigo" id="reg-cancelar">✖ Cancelar registro</button>' : ''}
+        <button class="btn btn-sec" id="reg-ficha">Abrir ficha do aluno</button>
+      </div>
+      ${D.podeCancelar(p) ? '' : '<p class="dica">Registros de dias anteriores só podem ser cancelados pelo admin.</p>'}`);
+    if ($('#reg-cancelar')) $('#reg-cancelar').onclick = () => dialogoCancelar(p);
+    $('#reg-ficha').onclick = () => abrirAluno(p.rm);
+  }
+
+  function dialogoCancelar(p, aoTerminar) {
+    const a = D.S.alunos[p.rm] || p;
+    App.abrirPainel(`
+      <h2>Cancelar registro de entrada</h2>
+      <div class="ficha-topo">
+        <div class="ficha-foto">${Fotos.html(a, 'foto-mini')}</div>
+        <div><b>${esc(U.nomeProprio(p.nome))}</b><p class="dica">RM ${esc(p.rm)} · ${esc(p.status)} · ${U.fmtData(p.data)} às ${p.hora.slice(0, 5)}</p></div>
+      </div>
+      <form id="form-cancelar">
+        <label>Motivo
+          <select id="cn-motivo" required>
+            <option value="">Escolha…</option>
+            <option>Leitura de teste</option>
+            <option>Aluno errado (cartão de outro aluno)</option>
+            <option>Registro em duplicidade</option>
+            <option>Aluno não entrou / saiu em seguida</option>
+            <option value="outro">Outro motivo…</option>
+          </select></label>
+        <label id="cn-outro-l" hidden>Descreva o motivo <input id="cn-outro" maxlength="120"></label>
+        <p class="dica">O registro não é apagado da planilha: fica marcado como <b>Cancelado</b>, com seu usuário, data/hora e o motivo. Ele sai das listas, dos relatórios e da contagem de atrasos/faltas.</p>
+        <button class="btn btn-perigo btn-bloco" type="submit">Confirmar cancelamento</button>
+        <button class="btn btn-sec btn-bloco" type="button" data-fechar>Voltar</button>
+      </form>`);
+    $('#cn-motivo').onchange = () => { $('#cn-outro-l').hidden = $('#cn-motivo').value !== 'outro'; };
+    $('#form-cancelar').addEventListener('submit', (e) => {
+      e.preventDefault();
+      let motivo = $('#cn-motivo').value;
+      if (motivo === 'outro') motivo = $('#cn-outro').value.trim();
+      if (!motivo) { U.toast('Informe o motivo do cancelamento.', 'erro'); return; }
+      try {
+        D.cancelarPresenca(p.id, motivo);
+        fecharPainel();
+        U.toast(`Registro de ${U.primeiroNome(p.nome)} cancelado ✔`);
+        App.atualizarTudo();
+        if (aoTerminar) aoTerminar();
+      } catch (err) { U.toast(err.message, 'erro'); }
+    });
   }
 
   // ------------------------------------------------------------------ Painel / menu

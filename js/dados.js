@@ -185,13 +185,16 @@
       });
 
       // Mescla o movimento do dia vindo de todos os aparelhos
+      const cancelPendentes = new Set(S.fila.filter((o) => o.tipo === 'cancelamento').map((o) => o.dados.presencaId));
       r.presencas.forEach((p) => {
         const x = dePresenca(p);
+        if (x.status === 'Cancelado' || cancelPendentes.has(x.id)) { delete S.presencas[x.id]; return; }
         const local = D.presencaDoDia(x.rm, x.data);
         if (local && local.id !== x.id && !local.enviado) delete S.presencas[local.id];
         S.presencas[x.id] = x;
       });
       r.avisos.forEach((a) => { const x = deAviso(a); S.avisos[x.id] = x; });
+      (r.recusados || []).forEach((c) => U.toast('Cancelamento recusado: ' + c.erro, 'erro'));
 
       limparAntigos();
       S.ultimaSync = U.agoraIso();
@@ -242,6 +245,29 @@
     D.salvar('presencas');
     enfileirar('presenca', p);
     return { tipo: p.status === 'Atrasado' ? 'atraso' : 'ok', aluno, presenca: p };
+  };
+
+  // ------------------------------------------------------------------ Cancelar registro de entrada
+  /** Qualquer usuário cancela registros do dia; dias anteriores só o admin (o servidor confere de novo). */
+  D.podeCancelar = (p) => !!p && (D.admin() || p.data === U.hojeStr());
+
+  /** Cancela (não apaga na planilha: marca "Cancelado" e registra quem/quando/motivo no Log). */
+  D.cancelarPresenca = function (id, motivo) {
+    const p = S.presencas[id];
+    if (!p) return false;
+    if (!D.podeCancelar(p)) throw new Error('Só o admin cancela registros de dias anteriores.');
+    const iFila = S.fila.findIndex((o) => o.tipo === 'presenca' && o.id === id);
+    delete S.presencas[id];
+    D.salvar('presencas');
+    if (iFila >= 0 && !p.enviado && !D.sincronizando) {
+      // ainda não tinha ido para a planilha: basta tirar da fila deste aparelho
+      S.fila.splice(iFila, 1);
+      D.salvar('fila');
+      D.avisar('fila');
+      return true;
+    }
+    enfileirar('cancelamento', { id: U.uuid(), presencaId: id, rm: p.rm, data: p.data, motivo: motivo || '', operador: S.sessao.usuario });
+    return true;
   };
 
   // ------------------------------------------------------------------ Avisos (WhatsApp)
