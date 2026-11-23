@@ -47,6 +47,7 @@
     });
     $('#btn-lote-freq').addEventListener('click', loteFrequencia);
     $('#btn-xls-turma').addEventListener('click', () => Excel.turma($('#alunos-turma').value));
+    $('#btn-controle').addEventListener('click', () => Controle.abrir($('#alunos-turma').value));
     $('#btn-etiquetas').addEventListener('click', () => {
       const t = $('#alunos-turma').value;
       const n = t ? D.alunosDaTurma(t).length : Object.values(D.S.alunos).filter((a) => a.ativo).length;

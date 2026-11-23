@@ -1,6 +1,6 @@
 /* Service Worker — deixa o app abrir e funcionar sem internet.
    Ao alterar qualquer arquivo do app, aumente a VERSAO para os celulares baixarem a nova versão. */
-const VERSAO = 'portaria-v1.6.0';
+const VERSAO = 'portaria-v1.7.0';
 
 const ARQUIVOS = [
   './',
@@ -17,6 +17,7 @@ const ARQUIVOS = [
   './js/pdf.js',
   './js/excel.js',
   './js/qr.js',
+  './js/controle.js',
   './js/usuarios.js',
   './js/app.js',
   './icons/icon-192.png',
@@ -33,7 +34,8 @@ const BIBLIOTECAS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js'
 ];
 
 self.addEventListener('install', (e) => {

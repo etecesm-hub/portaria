@@ -447,5 +447,6 @@
   };
 
   PDF.mostrar = salvar; // pré-visualização + baixar/compartilhar, usada por outros módulos
+  PDF.interno = { carregarLogos, cabecalho, rodapes, assinaturas, cores: { VERM, CINZA, CLARO, TXT, VERDE, AMBAR } };
   window.PDF = PDF;
 })();
