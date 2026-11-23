@@ -34,6 +34,8 @@ chamada-portaria/
 │   ├── dados.js            ← armazenamento local, fila offline e sincronização
 │   ├── scanner.js          ← leitor de QR Code
 │   ├── importar.js         ← leitura das planilhas da Secretaria
+│   ├── fotos.js            ← fotos 3x4 (planilha + cópia offline no aparelho)
+│   ├── qr.js               ← QR do aluno: cartões com foto, etiquetas e imagem
 │   ├── pdf.js              ← relatórios em PDF + pré-visualização
 │   ├── excel.js            ← relatórios em Excel e modelo de contatos
 │   ├── usuarios.js         ← gestão de usuários e troca de senha
@@ -75,7 +77,8 @@ precisa de **HTTPS** (veja o passo 5).
 ## 4. Instalar o backend (Google Apps Script)
 
 1. Na planilha, abra o menu **Extensões → Apps Script**.
-2. Apague o conteúdo do arquivo `Código.gs` e **cole todo o `apps-script/code.gs`**.
+2. Apague o conteúdo do arquivo `Código.gs` e **cole todo o `apps-script/code.gs`**. Depois crie um
+   segundo arquivo em **Arquivos → + → Script**, chame de `fotos` e cole o `apps-script/fotos.gs`.
 3. Clique em ⚙️ **Configurações do projeto** e marque *"Exibir arquivo de manifesto appsscript.json"*.
    Volte ao editor, abra o `appsscript.json` e substitua o conteúdo pelo nosso `apps-script/appsscript.json`.
 4. **Senha do admin.** No início do `code.gs`, troque `DIGITE_A_SENHA_AQUI` pela senha do admin
@@ -231,6 +234,9 @@ a partir de 2027.
   - **Etiquetas A4 por turma:** aba **Alunos** → escolha a turma no filtro → **🏷 Etiquetas QR**.
     São 21 por folha, no formato Pimaco **A4256** (63,5 × 38,1 mm). Imprima em **tamanho real / 100%**
     (sem "ajustar à página"). Também serve papel comum: recorte pelo contorno.
+  - **Cartões de portaria com foto:** aba **Alunos** → turma no filtro → **🖨️ Imprimir QR** →
+    *Cartões com foto*. Tamanho cartão de crédito (85,6 × 54 mm), 10 por folha A4: foto, nome, RM,
+    turma e QR. Imprima em 100%, recorte pelo contorno e, se quiser, plastifique.
   - **Imagem individual:** abra a ficha do aluno → **🔳 QR do aluno** → *Compartilhar* (WhatsApp…)
     ou *Baixar imagem*. O aluno pode guardar na galeria e mostrar na portaria.
 - O leitor também aceita QR com só o número (`27247`), `RM: 27247` ou link com `?rm=27247`.
@@ -282,9 +288,24 @@ a portaria registrou alguma entrada (dias letivos).
 
 ---
 
+## 9b. Fotos 3x4
+
+- A foto aparece **grande na tela da leitura do QR** (o inspetor confere se é a pessoa certa),
+  na ficha do aluno, em miniatura nas listas e no **relatório individual em PDF**.
+- **Em lote:** aba **Importar** → *Fotos dos alunos* → selecione vários arquivos nomeados pelo RM
+  (`27247.jpg`). O app reduz cada foto para 240 × 320 px (~15 KB) e mostra todas para conferir
+  antes de gravar.
+- **Uma por vez:** ficha do aluno → **📷 Trocar foto** (câmera ou galeria do celular).
+- As fotos ficam na aba **Fotos** da planilha e numa cópia no aparelho (aparecem sem internet).
+  Cada celular baixa só as fotos novas ou alteradas.
+- As fotos iniciais foram recortadas dos **caroscópios** do Sistema NSA (um PDF por turma, com as
+  fotos em grade e o nome embaixo) e conferidas uma a uma pelo nome impresso.
+
 ## 10. Privacidade (LGPD)
 
 - Os dados ficam na planilha do e-mail do sistema e no armazenamento local dos celulares autorizados.
+- **Fotos de alunos (menores de idade) nunca vão para o GitHub**, que é público: ficam só na planilha
+  e nos aparelhos com login.
 - Use senhas fortes e não compartilhe o login entre pessoas: cada registro grava quem o fez.
 - Ao sair, os dados de cadastro continuam no aparelho para uso offline. Em celular que deixar de ser
   usado pela escola, limpe os dados do site nas configurações do navegador.

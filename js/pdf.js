@@ -175,8 +175,14 @@
     // ---------- Dados do aluno
     y = secao(doc, y, 'Dados do aluno');
     const lab = { fillColor: CLARO, fontStyle: 'bold', textColor: CINZA, cellWidth: 30 };
+    const foto = window.Fotos && Fotos.url(aluno.rm);
+    if (foto) {                                         // foto 3x4 à direita do quadro
+      const xf = doc.internal.pageSize.getWidth() - 15 - 24;
+      doc.addImage(foto, 'JPEG', xf, y, 24, 32);
+      doc.setDrawColor(200, 204, 206); doc.setLineWidth(0.3); doc.rect(xf, y, 24, 32);
+    }
     doc.autoTable({
-      startY: y, theme: 'grid', margin: { left: 15, right: 15 },
+      startY: y, theme: 'grid', margin: { left: 15, right: foto ? 15 + 27 : 15 },
       styles: { fontSize: 8.5, cellPadding: 1.8, lineColor: [222, 226, 228], lineWidth: 0.2, textColor: TXT },
       body: [
         [{ content: 'Nome', styles: lab }, { content: aluno.nome, colSpan: 3, styles: { fontStyle: 'bold' } }],
@@ -186,7 +192,7 @@
         [{ content: 'Responsável', styles: lab }, aluno.nomeResponsavel ? U.nomeProprio(aluno.nomeResponsavel) : '—', { content: 'Telefone', styles: lab }, aluno.telefone ? W.fmtTelefone(aluno.telefone) : '—']
       ]
     });
-    y = doc.lastAutoTable.finalY + 6;
+    y = Math.max(doc.lastAutoTable.finalY, foto ? y + 32 : 0) + 6;
 
     // ---------- Frequência por componente
     y = secao(doc, y, '1. Frequência por componente curricular');

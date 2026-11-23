@@ -20,7 +20,7 @@
   /** Desenha o QR em vetor no PDF (nítido em qualquer impressora). */
   function qrNoPdf(doc, texto, x, y, tam) {
     const m = matriz(texto);
-    const quiet = 2;                                   // margem branca em módulos
+    const quiet = 4;                                   // margem branca (zona de silêncio) em módulos
     const cel = tam / (m.n + quiet * 2);
     doc.setFillColor(255, 255, 255); doc.rect(x, y, tam, tam, 'F');
     doc.setFillColor(0, 0, 0);
@@ -38,7 +38,7 @@
   /** Desenha o QR num canvas. */
   function qrNoCanvas(ctx, texto, x, y, tam) {
     const m = matriz(texto);
-    const quiet = 2, cel = tam / (m.n + quiet * 2);
+    const quiet = 4, cel = tam / (m.n + quiet * 2);
     ctx.fillStyle = '#fff'; ctx.fillRect(x, y, tam, tam);
     ctx.fillStyle = '#000';
     for (let l = 0; l < m.n; l++) for (let c = 0; c < m.n; c++) {
@@ -103,6 +103,86 @@
 
     const nomeTurma = chaveTurma ? U.semAcento((D.turmas().find(([k]) => k === chaveTurma) || [])[1] || '').replace(/\W+/g, '_') : 'Todas_as_turmas';
     PDF.mostrar(doc, `Etiquetas_QR_${nomeTurma}.pdf`);
+  };
+
+  // ======================================================================
+  // CARTÕES DE PORTARIA COM FOTO (85,6 x 54 mm — tamanho cartão de crédito, 10 por A4)
+  // ======================================================================
+  function listaAlunos(chaveTurma) {
+    return chaveTurma
+      ? D.alunosDaTurma(chaveTurma)
+      : Object.values(D.S.alunos).filter((a) => a.ativo)
+        .sort((a, b) => U.rotuloTurma(a).localeCompare(U.rotuloTurma(b), 'pt-BR') || a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  Q.cartoes = async function (chaveTurma) {
+    const alunos = listaAlunos(chaveTurma);
+    if (!alunos.length) { U.toast('Nenhum aluno para gerar cartões.', 'erro'); return; }
+    const semFoto = alunos.filter((a) => !(window.Fotos && Fotos.tem(a.rm))).length;
+    U.toast(`Gerando ${alunos.length} cartão(ões)…`);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const CW = 85.6, CH = 54, COLS = 2, LINS = 5, GX = 4, GY = 3;
+    const MX = (210 - (COLS * CW + GX)) / 2, MY = (297 - (LINS * CH + (LINS - 1) * GY)) / 2;
+    const porFolha = COLS * LINS;
+
+    alunos.forEach((a, i) => {
+      if (i && i % porFolha === 0) doc.addPage();
+      const pos = i % porFolha, x = MX + (pos % COLS) * (CW + GX), y = MY + Math.floor(pos / COLS) * (CH + GY);
+      // contorno (linha de corte) e faixa
+      doc.setDrawColor(190, 196, 200); doc.setLineWidth(0.2); doc.roundedRect(x, y, CW, CH, 3, 3, 'S');
+      doc.setFillColor(...VERM); doc.roundedRect(x, y, CW, 9, 3, 3, 'F'); doc.rect(x, y + 5, CW, 4, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(6.6);
+      doc.text('ETEC DA ZONA LESTE · CEU SÃO MIGUEL', x + 4, y + 5.6);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(5.4);
+      doc.text('CARTÃO DE PORTARIA', x + CW - 4, y + 5.6, { align: 'right' });
+      // foto 3x4
+      const fx = x + 4, fy = y + 11.5, fw = 24, fh = 32;
+      const foto = window.Fotos && Fotos.url(a.rm);
+      if (foto) doc.addImage(foto, 'JPEG', fx, fy, fw, fh);
+      else {
+        doc.setFillColor(234, 237, 239); doc.rect(fx, fy, fw, fh, 'F');
+        doc.setTextColor(150, 160, 165); doc.setFontSize(6); doc.text('sem foto', fx + fw / 2, fy + fh / 2, { align: 'center' });
+      }
+      doc.setDrawColor(200, 204, 206); doc.setLineWidth(0.3); doc.rect(fx, fy, fw, fh);
+      // QR
+      const tq = 31;
+      qrNoPdf(doc, Q.conteudo(a.rm), x + CW - 3.5 - tq, y + 11, tq);
+      // RM e turma (coluna do meio)
+      const mx = fx + fw + 2.5;
+      doc.setTextColor(...CINZA); doc.setFont('helvetica', 'normal'); doc.setFontSize(5.8);
+      doc.text('RM', mx, y + 15);
+      doc.setTextColor(...VERM); doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5);
+      doc.text(a.rm, mx, y + 20.5);
+      doc.setTextColor(...CINZA); doc.setFont('helvetica', 'normal'); doc.setFontSize(5.8);
+      const larguraMeio = (x + CW - 3.5 - tq) - mx - 1.5;
+      doc.text(quebrar(doc, `${a.serie}ª série`, larguraMeio, 1), mx, y + 26);
+      doc.text(quebrar(doc, U.curso(a.habilitacao), larguraMeio, 2), mx, y + 29);
+      doc.text(quebrar(doc, String(a.turma || '').replace(/^TURMA\s*/i, 'Turma '), larguraMeio, 1), mx, y + 35);
+      if (a.grupo) doc.text(quebrar(doc, U.nomeProprio(a.grupo), larguraMeio, 1), mx, y + 38);
+      // nome (faixa de baixo, largura total)
+      doc.setTextColor(...TXT); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.6);
+      doc.text(quebrar(doc, U.nomeProprio(a.nome), CW - 8, 1), x + 4, y + 49.2);
+    });
+
+    const nomeTurma = chaveTurma ? U.semAcento((D.turmas().find(([k]) => k === chaveTurma) || [])[1] || '').replace(/\W+/g, '_') : 'Todas_as_turmas';
+    if (semFoto) U.toast(`${semFoto} aluno(s) sem foto: o cartão sai com "sem foto".`);
+    PDF.mostrar(doc, `Cartoes_Portaria_${nomeTurma}.pdf`);
+  };
+
+  /** Escolha do formato de impressão */
+  Q.escolherImpressao = function (chaveTurma) {
+    const n = listaAlunos(chaveTurma).length;
+    const rotulo = chaveTurma ? (D.turmas().find(([k]) => k === chaveTurma) || [])[1] : `todas as turmas (${n} alunos)`;
+    App.abrirPainel(`
+      <h2>Imprimir QR dos alunos</h2>
+      <p class="dica">${U.esc(rotulo)} · ${n} aluno(s). Imprima em <b>tamanho real (100%)</b>, sem "ajustar à página".</p>
+      <button class="btn btn-primario btn-grande btn-bloco" id="imp-cartoes">🖨️ Cartões com foto · 10 por folha</button>
+      <p class="dica">Tamanho cartão de crédito (85,6 × 54 mm): foto, nome, RM, turma e QR. Recorte pelo contorno e, se quiser, plastifique.</p>
+      <button class="btn btn-sec btn-grande btn-bloco" id="imp-etiquetas">🏷 Etiquetas só com QR · 21 por folha</button>
+      <p class="dica">Etiqueta adesiva Pimaco A4256 (63,5 × 38,1 mm) para colar atrás da carteirinha.</p>`);
+    U.$('#imp-cartoes').onclick = () => Q.cartoes(chaveTurma);
+    U.$('#imp-etiquetas').onclick = () => Q.etiquetas(chaveTurma);
   };
 
   // ======================================================================

@@ -137,6 +137,7 @@
   D.carregarBase = async function (forcar) {
     if (DEMO) return;
     const r = await D.api('base', { versao: forcar ? '' : S.versaoBase });
+    if (window.Fotos) Fotos.sincronizar(r.versaoFotos);
     if (r.atualizado) return;
     const alunos = {};
     r.alunos.forEach((a) => { const x = deAluno(a); alunos[x.rm] = x; });
@@ -196,6 +197,7 @@
       S.ultimaSync = U.agoraIso();
       D.salvar('fila', 'presencas', 'avisos', 'ultimaSync');
       if (r.versaoBase && r.versaoBase !== S.versaoBase) await D.carregarBase().catch(() => {});
+      if (window.Fotos) Fotos.sincronizar(r.versaoFotos);
       D.sincronizando = false;
       D.avisar('sync');
       if (S.fila.length && lote.length === 150) setTimeout(() => D.sincronizar(), 500);

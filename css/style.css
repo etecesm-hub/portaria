@@ -250,3 +250,19 @@ main { padding: 14px 16px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom)
 
 /* ---------- QR do aluno ---------- */
 .qr-imagem { display: block; width: 100%; max-width: 420px; margin: 10px auto; border-radius: 14px; box-shadow: var(--sombra); }
+
+/* ---------- Fotos ---------- */
+.foto { display: block; object-fit: cover; background: #e3e7ea; flex: 0 0 auto; }
+.foto-vazia { display: grid; place-items: center; color: #8a979d; font-weight: 800; }
+.foto-mini { width: 38px; height: 50px; border-radius: 8px; font-size: .8rem; }
+.foto-ficha { width: 96px; height: 128px; border-radius: 12px; font-size: 1.6rem; box-shadow: var(--sombra); }
+.foto-grande { width: min(46vw, 210px); height: min(61vw, 280px); border-radius: 18px; margin: 18px auto 0; border: 5px solid rgba(255, 255, 255, .9); box-shadow: 0 10px 30px rgba(0, 0, 0, .3); font-size: 3rem; }
+.ficha-topo { display: flex; gap: 14px; align-items: flex-start; padding-right: 40px; }
+.ficha-topo h2 { padding-right: 0; }
+.ficha-foto { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.btn-link { background: none; border: 0; color: var(--verm); font-weight: 700; font-size: .78rem; cursor: pointer; padding: 4px; }
+.grade-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin: 12px 0; max-height: 60vh; overflow-y: auto; }
+.grade-fotos figure { margin: 0; text-align: center; }
+.grade-fotos img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; }
+.grade-fotos figcaption { font-size: .7rem; line-height: 1.2; margin-top: 3px; color: var(--suave); }
+.grade-fotos figcaption b { display: block; color: var(--txt); }

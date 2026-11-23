@@ -123,7 +123,7 @@
         <span id="alunos-total" class="dica"></span>
         <button id="btn-pdf-turma" class="btn btn-sec" type="button">📄 PDF turma</button>
         <button id="btn-xls-turma" class="btn btn-sec" type="button">📊 Excel turma</button>
-        <button id="btn-etiquetas" class="btn btn-sec" type="button">🏷 Etiquetas QR</button>
+        <button id="btn-etiquetas" class="btn btn-sec" type="button">🖨️ Imprimir QR</button>
         <button id="btn-lote-freq" class="btn btn-whats" type="button">Avisar freq. baixa</button>
       </div>
       <ul id="lista-alunos" class="lista"></ul>
@@ -138,6 +138,14 @@
         <span>📄 Escolher planilha</span>
       </label>
       <div id="preview" hidden></div>
+
+      <h2 class="titulo-sec">Fotos dos alunos (3x4)</h2>
+      <p class="dica">Selecione várias fotos de uma vez. Cada arquivo deve ter o <b>RM no nome</b> (ex.: <code>27247.jpg</code>). O app reduz as fotos e mostra todas para você conferir antes de gravar. Para um aluno só, use <b>Trocar foto</b> na ficha dele.</p>
+      <label class="arquivo">
+        <input id="arquivo-fotos" type="file" accept="image/*" multiple>
+        <span>🖼 Escolher fotos</span>
+      </label>
+      <div id="preview-fotos" hidden></div>
 
       <h2 class="titulo-sec">Telefones dos responsáveis</h2>
       <p class="dica">Baixe a planilha já preenchida com RM, nome e turma de todos os alunos cadastrados. Preencha as colunas <b>RESPONSAVEL</b> e <b>TELEFONE</b> (com DDD) e importe aqui mesmo. Linhas sem telefone são ignoradas; telefones já cadastrados são substituídos pelos da planilha.</p>
@@ -157,6 +165,7 @@
 <div id="resultado" class="resultado" hidden>
   <div class="resultado-card">
     <div class="resultado-status" id="res-status"></div>
+    <div id="res-foto"></div>
     <div class="resultado-nome" id="res-nome"></div>
     <div class="resultado-info" id="res-info"></div>
   </div>
@@ -184,6 +193,7 @@
 <script src="js/config.js"></script>
 <script src="js/util.js"></script>
 <script src="js/dados.js"></script>
+<script src="js/fotos.js"></script>
 <script src="js/whatsapp.js"></script>
 <script src="js/scanner.js"></script>
 <script src="js/importar.js" defer></script>

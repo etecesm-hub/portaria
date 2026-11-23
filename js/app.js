@@ -43,8 +43,8 @@
     $('#btn-etiquetas').addEventListener('click', () => {
       const t = $('#alunos-turma').value;
       const n = t ? D.alunosDaTurma(t).length : Object.values(D.S.alunos).filter((a) => a.ativo).length;
-      if (!t && !confirm(`Nenhuma turma escolhida no filtro. Gerar etiquetas de TODOS os ${n} alunos ativos?`)) return;
-      QR.etiquetas(t);
+      if (!t && !confirm(`Nenhuma turma escolhida no filtro. Gerar para TODOS os ${n} alunos ativos?`)) return;
+      QR.escolherImpressao(t);
     });
     $('#btn-pdf-dia').addEventListener('click', () => PDF.dia($('#hoje-data').value || U.hojeStr(), $('#hoje-turma').value));
     $('#btn-xls-dia').addEventListener('click', () => Excel.dia($('#hoje-data').value || U.hojeStr(), $('#hoje-turma').value));
@@ -59,8 +59,12 @@
       if (motivo === 'sessao') { mostrarTela(); return; }
       atualizarStatus();
       if (motivo === 'base') { preencherTurmas(); }
+      if (motivo === 'fotos') { renderPortaria(); if (App.abaAtual === 'hoje') renderHoje(); if (App.abaAtual === 'alunos') renderAlunos(); return; }
       if (motivo === 'sync' || motivo === 'base' || motivo === 'fila') { renderPortaria(); if (App.abaAtual === 'hoje') renderHoje(); if (App.abaAtual === 'alunos') renderAlunos(); }
     });
+
+    $('#arquivo-fotos').addEventListener('change', (e) => { if (e.target.files.length) Fotos.importarArquivos([...e.target.files]); });
+    Fotos.carregarLocal().then((n) => { if (n) App.atualizarTudo(); });
 
     setInterval(relogio, 1000); relogio();
     mostrarTela();
@@ -142,6 +146,7 @@
     box.className = 'resultado ' + r.tipo;
     const st = r.nsa ? '⌨ DIGITE O RM' : { ok: '✔ NO HORÁRIO', atraso: '⏰ ATRASADO', repetido: 'ℹ JÁ REGISTRADO', erro: '✖ NÃO REGISTRADO' }[r.tipo];
     $('#res-status').textContent = st;
+    $('#res-foto').innerHTML = r.aluno ? Fotos.html(r.aluno, 'foto-grande') : '';
     $('#res-nome').textContent = r.aluno ? U.nomeProprio(r.aluno.nome) : r.nsa ? 'Carteirinha digital NSA' : (r.msg || '');
     $('#res-info').innerHTML = r.aluno
       ? `RM ${esc(r.aluno.rm)} · ${esc(U.rotuloTurma(r.aluno))}<br>${r.presenca ? (r.tipo === 'repetido' ? esc(r.msg) : 'Entrada às ' + r.presenca.hora.slice(0, 5)) : esc(r.msg || '')}`
@@ -166,6 +171,7 @@
       const a = D.S.alunos[p.rm] || p;
       return `<li class="item ${p.status === 'Atrasado' ? 'atraso' : 'ok'}">
         <div class="item-hora">${p.hora.slice(0, 5)}</div>
+        ${Fotos.html(a.rm ? a : p, 'foto-mini')}
         <div class="item-corpo"><b>${esc(U.nomeProprio(p.nome))}</b><span>RM ${p.rm} · ${esc(U.rotuloTurma(a))}</span></div>
         <div class="item-fim">${p.enviado ? '' : '<span class="nuvem" title="Aguardando envio">⏳</span>'}<span class="selo ${p.status === 'Atrasado' ? 'atraso' : 'ok'}">${p.status}</span></div>
       </li>`;
@@ -218,6 +224,7 @@
       const av = tipo ? D.avisoEnviado(a.rm, tipo, data) : null;
       return `<li class="item ${p ? (p.status === 'Atrasado' ? 'atraso' : 'ok') : 'falta'}" data-rm="${a.rm}">
         <div class="item-hora">${p ? p.hora.slice(0, 5) : '—'}</div>
+        ${Fotos.html(a, 'foto-mini')}
         <div class="item-corpo"><b>${esc(U.nomeProprio(a.nome))}</b><span>RM ${a.rm} · ${esc(U.rotuloTurma(a))}</span>
           ${av ? `<span class="aviso-ok">✔ Aviso enviado ${U.fmtDataHora(av.enviadoEm)} · ${esc(av.operador)}</span>` : ''}</div>
         <div class="item-fim">${tipo ? `<button class="btn-whats-mini ${av ? 'feito' : ''}" data-whats="${a.rm}" ${a.telefone ? '' : 'title="Sem telefone"'}>${av ? '✔' : '📲'}</button>` : ''}</div>
@@ -245,6 +252,7 @@
       const fa = f ? f.freqAcumulada : null;
       const cls = fa == null ? '' : fa >= CONFIG.FREQ_MINIMA ? 'ok' : fa >= 50 ? 'atraso' : 'falta';
       return `<li class="item" data-rm="${a.rm}">
+        ${Fotos.html(a, 'foto-mini')}
         <div class="item-corpo"><b>${esc(U.nomeProprio(a.nome))}${a.ativo ? '' : ' <small>(inativo)</small>'}</b>
           <span>RM ${a.rm} · ${esc(U.rotuloTurma(a))}${a.telefone ? '' : ' · <i>sem telefone</i>'}</span></div>
         <div class="item-fim"><span class="selo ${cls}">${U.fmtPct(fa)}</span></div>
@@ -268,8 +276,11 @@
     const avisos = D.avisosDe(rm).slice(0, 5);
     const disc = f ? Object.entries(f.disciplinas || {}) : [];
     App.abrirPainel(`
-      <h2>${esc(U.nomeProprio(a.nome))}</h2>
-      <p class="dica">RM ${a.rm} · ${esc(U.rotuloTurma(a))} · ${esc(a.grupo || '')}${a.ativo ? '' : ' · <b>INATIVO</b>'}</p>
+      <div class="ficha-topo">
+        <div class="ficha-foto">${Fotos.html(a, 'foto-ficha')}<button class="btn-link" id="ficha-trocar-foto" type="button">📷 ${Fotos.tem(rm) ? 'Trocar foto' : 'Adicionar foto'}</button></div>
+        <div><h2>${esc(U.nomeProprio(a.nome))}</h2>
+        <p class="dica">RM ${a.rm} · ${esc(U.rotuloTurma(a))} · ${esc(a.grupo || '')}${a.ativo ? '' : ' · <b>INATIVO</b>'}</p></div>
+      </div>
       <div class="hoje-aluno ${hoje ? (hoje.status === 'Atrasado' ? 'atraso' : 'ok') : 'falta'}">
         Hoje: ${hoje ? `${hoje.status} às ${hoje.hora.slice(0, 5)}` : 'sem entrada registrada'}
       </div>
@@ -307,6 +318,7 @@
       U.toast('Contato salvo ✔');
     });
     $('#ficha-pdf').addEventListener('click', () => PDF.aluno(rm));
+    $('#ficha-trocar-foto').addEventListener('click', () => Fotos.trocar(rm, () => abrirAluno(rm)));
     $('#ficha-xls').addEventListener('click', () => Excel.aluno(rm));
     $('#ficha-qr').addEventListener('click', () => QR.abrirAluno(rm));
     const liga = (id, tipo) => { const b = $(id); if (b) b.addEventListener('click', () => W.enviar(D.S.alunos[rm], tipo, { data: U.hojeStr(), hora: hoje ? hoje.hora : '' }) && abrirAluno(rm)); };
