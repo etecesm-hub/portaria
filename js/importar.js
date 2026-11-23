@@ -107,13 +107,16 @@
     }
 
     if (tipo !== 'contatos' && (!meta.serie || !meta.turma)) alertas.push('Série/Turma não encontradas no cabeçalho: confira os campos abaixo.');
-    // A Secretaria às vezes exporta com o ano de ingresso (ex.: 2º ano saindo com "Ano: 2025")
-    const anoAtual = String(new Date().getFullYear());
-    if (tipo !== 'contatos' && meta.ano !== anoAtual) {
-      if (meta.ano) alertas.push(`O cabeçalho indica "Ano: ${meta.ano}". Ajustado para o ano letivo atual (${anoAtual}) — altere abaixo se necessário.`);
-      meta.anoPlanilha = meta.ano;
-      meta.ano = anoAtual;
-      registros.forEach((r) => { r.ano = anoAtual; });
+    // "Ano" do cabeçalho da Secretaria = ANO DE INGRESSO da turma (o 2º ano de 2026 sai com "Ano: 2025").
+    // É guardado como está; os relatórios usam sempre o ano letivo atual.
+    if (tipo !== 'contatos') {
+      const anoAtual = new Date().getFullYear();
+      if (!meta.ano && meta.serie) meta.ano = String(anoAtual - (Number(meta.serie) - 1)); // deduz pelo nº da série
+      registros.forEach((r) => { if (!r.ano) r.ano = meta.ano; });
+      const esperado = meta.serie ? anoAtual - (Number(meta.serie) - 1) : null;
+      if (meta.ano && esperado && Number(meta.ano) !== esperado) {
+        alertas.push(`Ano de ingresso ${meta.ano} não bate com a ${meta.serie}ª série em ${anoAtual} (esperado ${esperado}). Confira se a lista é da turma certa.`);
+      }
     }
     return { tipo, meta, registros, alertas, disciplinas: discCols.map((d) => d.sigla), arquivo: nomeArquivo };
   };
@@ -151,7 +154,7 @@
           <label>Série <input id="imp-serie" value="${U.esc(res.meta.serie)}" inputmode="numeric"></label>
           <label>Turma <input id="imp-turma" value="${U.esc(res.meta.turma)}"></label>
           <label class="larga">Habilitação <input id="imp-hab" value="${U.esc(res.meta.habilitacao)}"></label>
-          <label>Ano <input id="imp-ano" value="${U.esc(res.meta.ano)}" inputmode="numeric"></label>
+          <label>Ano de ingresso <input id="imp-ano" value="${U.esc(res.meta.ano)}" inputmode="numeric"></label>
         </div>` : ''}
         ${res.tipo === 'alunos' ? `<p class="dica">${novos} novo(s) · ${transf} mudança(s) de turma · ${res.registros.length - novos - transf} já cadastrado(s)</p>
           <label class="check"><input type="checkbox" id="imp-inativar"> Marcar como inativos os alunos desta turma que não estão na planilha (transferidos). O histórico é mantido.</label>` : ''}

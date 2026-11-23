@@ -211,9 +211,12 @@ na próxima vez que o app for aberto e fechado.
 Os componentes aparecem pela **sigla da Secretaria** (ARTE, BIO, MAT…). Cada série/habilitação pode
 ter componentes diferentes; o app lê as colunas que existirem na Lista de Frequência importada.
 
-### Ano letivo
-Algumas listas saem com o ano de ingresso no cabeçalho (ex.: 2º ano com `Ano: 2025`). O app ajusta
-para o ano atual e avisa na prévia; os relatórios usam sempre o ano letivo corrente.
+### Ano de ingresso
+O campo `Ano` do cabeçalho da Secretaria é o **ano de ingresso** da turma: em 2026, o 1º ano sai com
+`Ano: 2026` e o 2º ano com `Ano: 2025`. O app guarda esse ano como está (coluna `Ano` da aba Alunos)
+e avisa na prévia se ele não combinar com a série (ex.: 2ª série com ingresso 2026 → lista errada?).
+Os relatórios usam sempre o ano letivo corrente. O curso começou em 2025, então o 3º ano só existe
+a partir de 2027.
 
 ---
 
